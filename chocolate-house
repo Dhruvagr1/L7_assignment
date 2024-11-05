@@ -1,0 +1,104 @@
+import sqlite3
+
+try:
+    db = sqlite3.connect('chocolate_house.db')
+    cur = db.cursor()
+    print("DB connection successful.")
+except Exception as e:
+    print("Error connecting to DB:", e)
+
+def init_db():
+    # Tables for seasonal flavors, ingredients, customer suggestions, and allergy concerns
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS SeasonalFlavors (
+            id INTEGER PRIMARY KEY,
+            flavor_name TEXT,
+            description TEXT,
+            season TEXT
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS Ingredients (
+            id INTEGER PRIMARY KEY,
+            ingredient_name TEXT,
+            stock_quantity INTEGER
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS CustomerSuggestions (
+            id INTEGER PRIMARY KEY,
+            customer_name TEXT,
+            suggested_flavor TEXT,
+            comment TEXT
+        )
+    ''')
+    cur.execute('''
+        CREATE TABLE IF NOT EXISTS AllergyConcerns (
+            id INTEGER PRIMARY KEY,
+            customer_name TEXT,
+            allergy_ingredient TEXT
+        )
+    ''')
+    db.commit()
+    print("Tables initialized.")
+
+# Run to create tables
+init_db()
+
+
+def add_flavor(name, desc, season):
+    cur.execute('INSERT INTO SeasonalFlavors (flavor_name, description, season) VALUES (?, ?, ?)', (name, desc, season))
+    db.commit()
+
+def fetch_flavors(season=None):
+    if season:
+        cur.execute('SELECT * FROM SeasonalFlavors WHERE season = ?', (season,))
+    else:
+        cur.execute('SELECT * FROM SeasonalFlavors')
+    return cur.fetchall()
+
+# Add and get ingredients
+def add_ingredient(name, quantity):
+    cur.execute('INSERT INTO Ingredients (ingredient_name, stock_quantity) VALUES (?, ?)', (name, quantity))
+    db.commit()
+
+def fetch_ingredients():
+    cur.execute('SELECT * FROM Ingredients')
+    return cur.fetchall()
+
+# Add and get customer suggestions
+def add_suggestion(cust_name, flavor, comment):
+    cur.execute('INSERT INTO CustomerSuggestions (customer_name, suggested_flavor, comment) VALUES (?, ?, ?)', (cust_name, flavor, comment))
+    db.commit()
+
+def fetch_suggestions():
+    cur.execute('SELECT * FROM CustomerSuggestions')
+    return cur.fetchall()
+
+# Add and get allergy concerns
+def add_allergy(cust_name, allergy_item):
+    cur.execute('INSERT INTO AllergyConcerns (customer_name, allergy_ingredient) VALUES (?, ?)', (cust_name, allergy_item))
+    db.commit()
+
+def fetch_allergies():
+    cur.execute('SELECT * FROM AllergyConcerns')
+    return cur.fetchall()
+
+def populate_samples():
+    add_flavor("Pumpkin Spice", "Warm spiced pumpkin", "Fall")
+    add_flavor("Mint Delight", "Minty fresh with chocolate", "Winter")
+    add_ingredient("Cocoa Powder", 150)
+    add_ingredient("Vanilla", 50)
+    add_suggestion("Emma", "Lavender Chocolate", "Try adding lavender flavor")
+    add_suggestion("Liam", "Sea Salt Caramel", "A hint of salt would be great!")
+    add_allergy("Noah", "Peanuts")
+    add_allergy("Olivia", "Dairy")
+
+populate_samples()
+
+print("Seasonal Flavors:", fetch_flavors())
+print("Ingredients Inventory:", fetch_ingredients())
+print("Customer Suggestions:", fetch_suggestions())
+print("Allergy Concerns:", fetch_allergies())
+
+db.close()
